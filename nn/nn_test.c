@@ -17,7 +17,7 @@ int main() {
     matrix_print(a, "a");
     matrix_print(b, "b");
 
-    matrix_sum(a, b);
+    matrix_acc(a, b);
     matrix_print(a, "a + b");
 
     matrix_free(a);

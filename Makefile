@@ -3,7 +3,7 @@ CFLAGS = -Wall -Werror -O3
 LIBS = -lm
 BUILD_DIR = build
 
-TARGETS = ml_helloWorld ml_withBoolean ml_xor nn nn_test
+TARGETS = ml_helloWorld ml_withBoolean ml_xor nn_xor nn_test
 BINARIES = $(addprefix $(BUILD_DIR)/, $(TARGETS))
 
 .PHONY: all clean format
@@ -18,7 +18,7 @@ $(BUILD_DIR)/ml_%: basics/ml_%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 # Rule for the main nn library example
-$(BUILD_DIR)/nn: nn/nn.c nn/nn.h | $(BUILD_DIR)
+$(BUILD_DIR)/nn_xor: nn/nn_xor.c nn/nn.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 # Rule for the nn library test suite

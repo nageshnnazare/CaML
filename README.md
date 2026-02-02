@@ -4,10 +4,11 @@ CaML is a lightweight, dependency-free neural network library written in C. It f
 
 ## Project Structure
 
-- `nn/`: Core library containing matrix operations and neural network utilities.
-  - `nn.h`: Single-header library with matrix implementations.
-  - `nn.c`: Example usage/test for the `nn` library.
-- `basics/`: Educational examples demonstrating simple ML concepts.
+- `nn/`: Core library and modular implementations.
+  - `nn.h`: Single-header library with matrix implementations, macros, and activation functions.
+  - `nn_xor.c`: Modular XOR implementation using the `Matrix` library.
+  - `nn_test.c`: Test suite for the `Matrix` library operations.
+- `basics/`: Educational examples demonstrating simple ML concepts (self-contained).
   - `ml_helloWorld.c`: Simple linear regression (y = wx + b).
   - `ml_withBoolean.c`: Single neuron training for OR/AND gates.
   - `ml_xor.c`: Multi-layer perception implementation for XOR gate.
@@ -34,23 +35,25 @@ This will generate binaries in the `build/` directory:
 - `build/ml_helloWorld`
 - `build/ml_withBoolean`
 - `build/ml_xor`
-- `build/nn`
+- `build/nn_xor`
 - `build/nn_test`
 
 ### Running an Example
 
-Example for XOR gate:
+Example for XOR gate (modular implementation):
 ```bash
-./build/ml_xor
+./build/nn_xor
 ```
 
 ## Core Concepts
 
 ### Matrix Operations
-The foundation of the library is a simple `Matrix` struct and associated operations (sum, dot product, allocation).
+### Matrix Operations
+The foundation of the library is a simple [Matrix](nn/nn.h#L31-L36) struct and associated mathematical operations. Detailed documentation for these functions can be found in the [nn/ documentation](nn/README.md).
 
 ### Gradient Approximation
 Instead of backpropagation (initially), the examples use **Finite Differences** to approximate gradients:
+
 $$
 f'(x) \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
 $$
