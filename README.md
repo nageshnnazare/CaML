@@ -1,6 +1,6 @@
-# MLC - Machine Learning from scratch in C
+# CaML - C and Machine Learning
 
-MLC is a lightweight, dependency-free neural network library written in C. It focuses on clarity and understanding the fundamentals of machine learning by implementing core concepts from scratch.
+CaML is a lightweight, dependency-free neural network library written in C. It focuses on clarity and understanding the fundamentals of machine learning by implementing core concepts from scratch.
 
 ## Project Structure
 
@@ -50,6 +50,8 @@ The foundation of the library is a simple `Matrix` struct and associated operati
 
 ### Gradient Approximation
 Instead of backpropagation (initially), the examples use **Finite Differences** to approximate gradients:
-$$ f'(x) \approx \frac{f(x + \epsilon) - f(x)}{\epsilon} $$
+$$
+f'(x) \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
+$$
 
 This is an intuitive way to understand how weights and biases are updated to minimize the cost function.
