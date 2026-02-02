@@ -257,7 +257,8 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 2; ++j) {
-        printf("%d ~& %d = %d\n", i, j, forward_pass(model, i, j) < 0.5 ? 0 : 1);
+        printf("%d ~& %d = %d\n", i, j,
+               forward_pass(model, i, j) < 0.5 ? 0 : 1);
       }
     }
     printf("------------------\n");
