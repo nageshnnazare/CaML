@@ -1,20 +1,28 @@
-all: ml_helloWorld ml_withBoolean ml_xor nn
+CC = clang
+CFLAGS = -Wall -Werror -O3
+LIBS = -lm
+BUILD_DIR = build
 
-ml_helloWorld: basics/ml_helloWorld.c
-		clang -o build/ml_helloWorld -Wall -Werror basics/ml_helloWorld.c
+TARGETS = ml_helloWorld ml_withBoolean ml_xor nn
+BINARIES = $(addprefix $(BUILD_DIR)/, $(TARGETS))
 
-ml_withBoolean: basics/ml_withBoolean.c
-		clang -o build/ml_withBoolean -Wall -Werror -lm basics/ml_withBoolean.c
+.PHONY: all clean format
 
-ml_xor: basics/ml_xor.c
-		clang -o build/ml_xor -Wall -Werror -lm basics/ml_xor.c
+all: $(BUILD_DIR) $(BINARIES)
 
-nn: nn/nn.c nn/nn.h
-		clang -o build/nn -Wall -Werror -lm nn/nn.c
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-format: basics/ml_helloWorld.c basics/ml_withBoolean.c basics/ml_xor.c nn/nn.h nn/nn.c
-		clang-format --style=llvm -i basics/ml_helloWorld.c
-		clang-format --style=llvm -i basics/ml_withBoolean.c
-		clang-format --style=llvm -i basics/ml_xor.c
-		clang-format --style=llvm -i nn/nn.h
-		clang-format --style=llvm -i nn/nn.c
+# Rule for simple examples in basics/
+$(BUILD_DIR)/ml_%: basics/ml_%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+# Rule for the main nn library example/test
+$(BUILD_DIR)/nn: nn/nn.c nn/nn.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+format:
+	clang-format --style=llvm -i basics/*.c nn/*.c nn/*.h

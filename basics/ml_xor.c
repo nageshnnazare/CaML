@@ -1,3 +1,12 @@
+/**
+ * @file ml_xor.c
+ * @brief Training a Multi-Layer Perceptron (MLP) to solve the XOR problem.
+ *
+ * XOR cannot be solved by a single neuron because it is not linearly separable.
+ * This example uses a network with 2 hidden neurons (OR and NAND gates)
+ * feeding into an AND gate.
+ */
+
 #include <math.h>   // for expf
 #include <stdio.h>  // for printf
 #include <stdlib.h> // for rand
@@ -5,6 +14,7 @@
 
 typedef float sample[3];
 
+/** @brief XOR Training data */
 sample xor_train[] = {
     // {x1, x2, y}
     // (XOR function)
@@ -14,6 +24,7 @@ sample xor_train[] = {
     {1, 1, 0},
     // xor = (x | y) & ~(x & y)
 };
+/** @brief OR Training data (for comparison) */
 sample or_train[] = {
     // {x1, x2, y}
     // (OR function)
@@ -23,6 +34,7 @@ sample or_train[] = {
     {1, 1, 1},
     // or = (x | y)
 };
+/** @brief AND Training data (for comparison) */
 sample and_train[] = {
     // {x1, x2, y}
     // (AND function)
@@ -32,6 +44,7 @@ sample and_train[] = {
     {1, 1, 1},
     // and = (x & y)
 };
+/** @brief NAND Training data (for comparison) */
 sample nand_train[] = {
     // {x1, x2, y}
     // (NAND function)
@@ -45,6 +58,12 @@ sample nand_train[] = {
 sample *train = xor_train;
 size_t train_count = 4;
 
+/**
+ * @struct Xor
+ * @brief Represents the weights and biases for the entire MLP.
+ * High-level architecture:
+ * Input -> (OR Gate neuron, NAND Gate neuron) -> AND Gate neuron -> Output
+ */
 typedef struct {
   float or_w1;
   float or_w2;
@@ -57,8 +76,10 @@ typedef struct {
   float and_b;
 } Xor;
 
+/** @brief Generates a random float between 0.0 and 1.0. */
 float rand_float(void) { return ((float)rand() / (float)RAND_MAX); }
 
+/** @brief Initializes the network with random weights and biases. */
 Xor rand_xor(void) {
   Xor model;
   model.or_w1 = rand_float();
@@ -87,12 +108,16 @@ void print_xor(Xor model) {
 
 float sigmoidf(float x) { return (1.0f / (1.0f + expf(-x))); }
 
+/**
+ * @brief Performs a forward pass through the network.
+ */
 float forward_pass(Xor model, float x1, float x2) {
   float a = sigmoidf(model.or_w1 * x1 + model.or_w2 * x2 + model.or_b);
   float b = sigmoidf(model.nand_w1 * x1 + model.nand_w2 * x2 + model.nand_b);
   return sigmoidf(model.and_w1 * a + model.and_w2 * b + model.and_b);
 }
 
+/** @brief Computes the Mean Squared Error (Loss). */
 float cost_func(Xor model) {
   float result = 0.0f;
   for (size_t i = 0; i < train_count; ++i) {
@@ -106,158 +131,77 @@ float cost_func(Xor model) {
   return result /= train_count;
 }
 
+/**
+ * @brief Approximates the gradient using finite differences.
+ * @param model Current model state.
+ * @param eps Step size for differentiation.
+ * @return Xor A "model" where each field contains the partial derivative of the
+ * cost.
+ */
 Xor finite_diff(Xor model, float eps) {
-  Xor new_model;
+  Xor d;
   float cost = cost_func(model);
   float save;
 
-  save = model.or_w1;
-  model.or_w1 += eps;
-  new_model.or_w1 = (cost_func(model) - cost) / eps;
-  model.or_w1 = save;
+#define DIFF(field)                                                            \
+  save = model.field;                                                          \
+  model.field += eps;                                                          \
+  d.field = (cost_func(model) - cost) / eps;                                   \
+  model.field = save;
 
-  save = model.or_w2;
-  model.or_w2 += eps;
-  new_model.or_w2 = (cost_func(model) - cost) / eps;
-  model.or_w2 = save;
+  DIFF(or_w1);
+  DIFF(or_w2);
+  DIFF(or_b);
+  DIFF(nand_w1);
+  DIFF(nand_w2);
+  DIFF(nand_b);
+  DIFF(and_w1);
+  DIFF(and_w2);
+  DIFF(and_b);
 
-  save = model.or_b;
-  model.or_b += eps;
-  new_model.or_b = (cost_func(model) - cost) / eps;
-  model.or_b = save;
-
-  save = model.nand_w1;
-  model.nand_w1 += eps;
-  new_model.nand_w1 = (cost_func(model) - cost) / eps;
-  model.nand_w1 = save;
-
-  save = model.nand_w2;
-  model.nand_w2 += eps;
-  new_model.nand_w2 = (cost_func(model) - cost) / eps;
-  model.nand_w2 = save;
-
-  save = model.nand_b;
-  model.nand_b += eps;
-  new_model.nand_b = (cost_func(model) - cost) / eps;
-  model.nand_b = save;
-
-  save = model.and_w1;
-  model.and_w1 += eps;
-  new_model.and_w1 = (cost_func(model) - cost) / eps;
-  model.and_w1 = save;
-
-  save = model.and_w2;
-  model.and_w2 += eps;
-  new_model.and_w2 = (cost_func(model) - cost) / eps;
-  model.and_w2 = save;
-
-  save = model.and_b;
-  model.and_b += eps;
-  new_model.and_b = (cost_func(model) - cost) / eps;
-  model.and_b = save;
-
-  return new_model;
+  return d;
 }
 
-Xor apply_diff(Xor model, Xor new_model, float rate) {
-  model.or_w1 -= rate * new_model.or_w1;
-  model.or_w2 -= rate * new_model.or_w2;
-  model.or_b -= rate * new_model.or_b;
-  model.nand_w1 -= rate * new_model.nand_w1;
-  model.nand_w2 -= rate * new_model.nand_w2;
-  model.nand_b -= rate * new_model.nand_b;
-  model.and_w1 -= rate * new_model.and_w1;
-  model.and_w2 -= rate * new_model.and_w2;
-  model.and_b -= rate * new_model.and_b;
+/** @brief Updates the model weights and biases using the calculated gradient.
+ */
+Xor apply_diff(Xor model, Xor d, float rate) {
+  model.or_w1 -= rate * d.or_w1;
+  model.or_w2 -= rate * d.or_w2;
+  model.or_b -= rate * d.or_b;
+  model.nand_w1 -= rate * d.nand_w1;
+  model.nand_w2 -= rate * d.nand_w2;
+  model.nand_b -= rate * d.nand_b;
+  model.and_w1 -= rate * d.and_w1;
+  model.and_w2 -= rate * d.and_w2;
+  model.and_b -= rate * d.and_b;
   return model;
 }
 
+/**
+ * @brief Main function trains the network for XOR and other gates.
+ */
 int main(int argc, char *argv[]) {
   srand(time(0));
-  {
-    train = xor_train;
+
+  sample *datasets[] = {xor_train, or_train, and_train, nand_train};
+  const char *names[] = {"XOR", "OR", "AND", "NAND"};
+
+  for (size_t d = 0; d < 4; ++d) {
+    printf("Training for %s gate...\n", names[d]);
+    train = datasets[d];
     Xor model = rand_xor();
 
     float eps = 1e-1;
     float rate = 1e-1;
 
     for (int i = 0; i < 20000; ++i) {
-      Xor new_model = finite_diff(model, eps);
-      model = apply_diff(model, new_model, rate);
-      // printf("cost = %f\n", cost_func(model));
+      Xor g = finite_diff(model, eps);
+      model = apply_diff(model, g, rate);
     }
-
-    // print_xor(model);
 
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 2; ++j) {
-        printf("%d ^ %d = %d\n", i, j, forward_pass(model, i, j) < 0.5 ? 0 : 1);
-      }
-    }
-    printf("------------------\n");
-  }
-  {
-    train = or_train;
-    Xor model = rand_xor();
-
-    float eps = 1e-1;
-    float rate = 1e-1;
-
-    for (int i = 0; i < 20000; ++i) {
-      Xor new_model = finite_diff(model, eps);
-      model = apply_diff(model, new_model, rate);
-      // printf("cost = %f\n", cost_func(model));
-    }
-
-    // print_xor(model);
-
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        printf("%d | %d = %d\n", i, j, forward_pass(model, i, j) < 0.5 ? 0 : 1);
-      }
-    }
-    printf("------------------\n");
-  }
-  {
-    train = and_train;
-    Xor model = rand_xor();
-
-    float eps = 1e-1;
-    float rate = 1e-1;
-
-    for (int i = 0; i < 20000; ++i) {
-      Xor new_model = finite_diff(model, eps);
-      model = apply_diff(model, new_model, rate);
-      // printf("cost = %f\n", cost_func(model));
-    }
-
-    // print_xor(model);
-
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        printf("%d & %d = %d\n", i, j, forward_pass(model, i, j) < 0.5 ? 0 : 1);
-      }
-    }
-    printf("------------------\n");
-  }
-  {
-    train = nand_train;
-    Xor model = rand_xor();
-
-    float eps = 1e-1;
-    float rate = 1e-1;
-
-    for (int i = 0; i < 20000; ++i) {
-      Xor new_model = finite_diff(model, eps);
-      model = apply_diff(model, new_model, rate);
-      // printf("cost = %f\n", cost_func(model));
-    }
-
-    // print_xor(model);
-
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        printf("%d ~& %d = %d\n", i, j,
+        printf("%d op %d = %d\n", i, j,
                forward_pass(model, i, j) < 0.5 ? 0 : 1);
       }
     }
