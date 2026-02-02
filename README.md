@@ -48,7 +48,6 @@ Example for XOR gate (modular implementation):
 ## Core Concepts
 
 ### Matrix Operations
-### Matrix Operations
 The foundation of the library is a simple [Matrix](nn/nn.h#L31-L36) struct and associated mathematical operations. Detailed documentation for these functions can be found in the [nn/ documentation](nn/README.md).
 
 ### Gradient Approximation
