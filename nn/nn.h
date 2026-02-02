@@ -39,6 +39,13 @@ typedef struct {
 #define MATRIX_AT(m, i, j) ((m).data[(i) * (m).cols + (j)])
 
 /**
+ * @brief Prints the matrix contents to stdout.
+ * @param m The matrix to print.
+ * @param name The name of the matrix.
+ */
+#define MAT_PRINT(m) matrix_print(m, #m)
+
+/**
  * @brief Generates a random float between 0.0 and 1.0.
  * @return float A random value.
  */
@@ -61,8 +68,9 @@ void matrix_free(Matrix m);
 /**
  * @brief Prints the matrix contents to stdout.
  * @param m The matrix to print.
+ * @param name The name of the matrix.
  */
-void matrix_print(Matrix m);
+void matrix_print(Matrix m, const char *name);
 
 /**
  * @brief Fills the matrix with random values between low and high.
@@ -116,14 +124,41 @@ Matrix matrix_alloc(size_t rows, size_t cols) {
 
 void matrix_free(Matrix m) { NN_FREE(m.data); }
 
-void matrix_print(Matrix m) {
+void matrix_print(Matrix m, const char *name) {
+  int prefix_len = printf("%s = ", name);
   for (size_t i = 0; i < m.rows; i++) {
+    if (i > 0) {
+      for (int k = 0; k < prefix_len; k++)
+        printf(" ");
+    }
+    const char *start = "";
+    const char *end = "";
+
+    if (m.rows == 1) {
+      start = "[ ";
+      end = " ]";
+    } else if (i == 0) {
+      start = "┌ ";
+      end = " ┐";
+    } else if (i == m.rows - 1) {
+      start = "└ ";
+      end = " ┘";
+    } else {
+      start = "│ ";
+      end = " │";
+    }
+
+    printf("%s", start);
     for (size_t j = 0; j < m.cols; j++) {
-      printf("%f ", MATRIX_AT(m, i, j));
+      printf("%10.6f ", MATRIX_AT(m, i, j));
+    }
+    printf("%s", end);
+
+    if (i == m.rows - 1) {
+      printf(" (%zu, %zu)", m.rows, m.cols);
     }
     printf("\n");
   }
-  printf("----------------------------\n");
 }
 
 void matrix_rand(Matrix m, float low, float high) {

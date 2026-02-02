@@ -35,6 +35,7 @@ This will generate binaries in the `build/` directory:
 - `build/ml_withBoolean`
 - `build/ml_xor`
 - `build/nn`
+- `build/nn_test`
 
 ### Running an Example
 
