@@ -2,11 +2,13 @@
 
 CaML is a lightweight, dependency-free neural network library written in C. It focuses on clarity and understanding the fundamentals of machine learning by implementing core concepts from scratch.
 
+stb style single header library for matrix operations and neural networks
+
 ## Project Structure
 
 - `nn/`: Core library and modular implementations.
   - `nn.h`: Single-header library with matrix implementations, macros, and activation functions.
-  - `nn_xor.c`: Modular XOR implementation using the `Matrix` library.
+  - `nn_xor.c`: Fully documented XOR implementation using the modular library.
   - `nn_test.c`: Test suite for the `Matrix` library operations.
 - `basics/`: Educational examples demonstrating simple ML concepts (self-contained).
   - `ml_helloWorld.c`: Simple linear regression (y = wx + b).

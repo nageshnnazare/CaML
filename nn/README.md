@@ -5,7 +5,7 @@ This directory contains the core matrix library and neural network implementatio
 ## Files
 
 - [nn.h](nn.h): Modular single-header library for matrix operations.
-- [nn_xor.c](nn_xor.c): Example XOR implementation using the modular library.
+- [nn_xor.c](nn_xor.c): Example XOR implementation using the modular library, featuring comprehensive Doxygen-style documentation.
 - [nn_test.c](nn_test.c): Test suite for matrix operations.
 
 ## Core Data Structures
