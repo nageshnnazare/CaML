@@ -14,11 +14,11 @@ int main() {
     Matrix b = matrix_alloc(3, 3);
     matrix_fill(b, 2);
 
-    matrix_print(a, "a");
-    matrix_print(b, "b");
+    matrix_print(a, "a", 0);
+    matrix_print(b, "b", 0);
 
     matrix_acc(a, b);
-    matrix_print(a, "a + b");
+    matrix_print(a, "a + b", 0);
 
     matrix_free(a);
     matrix_free(b);
@@ -33,11 +33,11 @@ int main() {
 
     Matrix c = matrix_alloc(1, 3);
 
-    matrix_print(a, "a");
-    matrix_print(b, "b");
+    matrix_print(a, "a", 0);
+    matrix_print(b, "b", 0);
 
     matrix_dot(c, a, b);
-    matrix_print(c, "c");
+    matrix_print(c, "c", 0);
 
     matrix_free(a);
     matrix_free(b);
