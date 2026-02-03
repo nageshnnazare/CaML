@@ -1,3 +1,42 @@
+/**
+ * @file nn.h
+ * @brief A lightweight, header-only neural network library in C.
+ *
+ * This library provides a modular implementation of a multi-layer perceptron (MLP).
+ * It uses a custom Matrix library for all linear algebra operations.
+ *
+ * @section usage Usage
+ * To use the implementation in a single C file, define `NN_IMPLEMENTATION` before
+ * including this header:
+ * @code
+ * #define NN_IMPLEMENTATION
+ * #include "nn.h"
+ * @endcode
+ *
+ * @section concepts Machine Learning Fundamentals
+ * @subsection linear_transformation Linear Transformation: y = wx + b
+ * The core of each neuron is a linear transformation:
+ * - **w (Weights)**: Parameters that determine the strength of connection between neurons.
+ * - **x (Inputs)**: Features or activations from the previous layer.
+ * - **b (Biases)**: Parameters that allow the neuron to shift the activation function.
+ * - **y (Logits)**: The raw output before applying a non-linear activation function.
+ *
+ * @subsection forward_pass Forward Propagation
+ * Computes the network's output by performing matrix multiplication (dot product)
+ * followed by adding biases and applying a non-linear activation (Sigmoid).
+ *
+ * @subsection cost_function Cost/Loss Function
+ * Measures the error between predicted and target values (Mean Squared Error).
+ *
+ * @subsection finite_diff Finite Differences Gradient Approximation
+ * Approximates gradients by perturbing each parameter (Weight or Bias) by a small
+ * epsilon ($\epsilon$) and observing the change in cost.
+ *
+ * @subsection gradient_descent Gradient Descent
+ * Optimizes the network by updating parameters in the opposite direction of the
+ * gradient, scaled by a learning rate.
+ */
+
 #ifndef NN_H
 #define NN_H
 
@@ -6,28 +45,28 @@
 
 /**
  * @brief Generates a random float between 0.0 and 1.0.
- * @return float A random value.
+ * @return float A random value for weight/bias initialization.
  */
 float randf(void);
 
 /**
- * @brief Applies the sigmoid activation function to each element of the matrix.
- * @param x The value to apply the sigmoid function to.
- * @return float The result of the sigmoid function.
+ * @brief Standard Logistic Sigmoid activation function.
+ *
+ * Maps any real-valued number into the (0, 1) range.
+ * Formula: f(x) = 1 / (1 + exp(-x))
+ *
+ * @param x The logit value.
+ * @return float The non-linear activation.
  */
 float sigmoidf(float x);
 
 /**
- * @brief Returns the number of elements in an array.
- * @param arr Array.
- * @return Number of elements.
+ * @brief Helper macro for array size calculation.
  */
 #define NN_ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 /**
- * @brief Allocates memory for a matrix.
- * @param size The size of the memory to allocate.
- * @return void* Pointer to the allocated memory.
+ * @brief Memory allocation wrapper.
  */
 #ifndef NN_MALLOC
 #include <stdlib.h>
@@ -35,8 +74,7 @@ float sigmoidf(float x);
 #endif // NN_MALLOC
 
 /**
- * @brief Frees the memory allocated for a matrix.
- * @param ptr Pointer to the memory to free.
+ * @brief Memory deallocation wrapper.
  */
 #ifndef NN_FREE
 #include <stdlib.h>
@@ -44,8 +82,7 @@ float sigmoidf(float x);
 #endif // NN_FREE
 
 /**
- * @brief Asserts a condition.
- * @param condition The condition to assert.
+ * @brief Internal assertion macro for safe dimensions.
  */
 #ifndef NN_ASSERT
 #include <assert.h>
@@ -54,223 +91,203 @@ float sigmoidf(float x);
 
 /**
  * @struct Matrix
- * @brief Represents a mathematical matrix of floats.
+ * @brief A generic 2D matrix structure.
  *
- * @var Matrix::rows The number of rows in the matrix.
- * @var Matrix::cols The number of columns in the matrix.
- * @var Matrix::stride The number of columns in the matrix.
- * @var Matrix::data Pointer to the flat-array of float values.
+ * Uses a flat float array for memory efficiency.
  */
 typedef struct {
-  size_t rows;
-  size_t cols;
-  size_t stride;
-  float *data;
+  size_t rows;   /**< Number of examples or features. */
+  size_t cols;   /**< Number of features or outputs. */
+  size_t stride; /**< Step size for sub-matrix memory access. */
+  float *data;   /**< Linearized buffer of weights, biases, or activations. */
 } Matrix;
 
 /**
- * @brief Accesses an element in the matrix at row i and column j.
+ * @brief Macro to access matrix elements given row i and column j.
  */
 #define MATRIX_AT(m, i, j) ((m).data[(i) * (m).stride + (j)])
 
 /**
- * @brief Prints the matrix contents to stdout.
- * @param m The matrix to print.
- * @param name The name of the matrix.
+ * @brief Interface to print a named matrix to stdout.
  */
 #define MATRIX_PRINT(m) matrix_print(m, #m, 0)
 
 /**
- * @brief Allocates memory for a matrix of given size.
- * @param rows Number of rows.
- * @param cols Number of columns.
- * @return Matrix The allocated matrix.
+ * @brief Allocates a matrix with specified dimensions.
+ * @param rows Rows count.
+ * @param cols Columns count.
+ * @return Matrix The initialized matrix structure.
  */
 Matrix matrix_alloc(size_t rows, size_t cols);
 
 /**
- * @brief Frees the memory allocated for a matrix.
- * @param m The matrix to free.
+ * @brief Frees matrix memory buffer.
+ * @param m Matrix to deallocate.
  */
 void matrix_free(Matrix m);
 
 /**
- * @brief Prints the matrix contents to stdout.
- * @param m The matrix to print.
- * @param name The name of the matrix.
- * @param padding The padding to use for the neural network.
+ * @brief Pretty-prints a matrix with unicode borders.
+ * @param m Matrix to print.
+ * @param name Variable identifier.
+ * @param padding Indentation level.
  */
 void matrix_print(Matrix m, const char *name, int padding);
 
 /**
- * @brief Fills the matrix with random values between low and high.
- * @param m The matrix to fill.
- * @param low The lower bound.
- * @param high The upper bound.
+ * @brief Randomly initializes matrix elements.
+ * @param m Target matrix.
+ * @param low Minimum value.
+ * @param high Maximum value.
  */
 void matrix_rand(Matrix m, float low, float high);
 
 /**
- * @brief Fills the entire matrix with a single value.
- * @param m The matrix to fill.
- * @param val The value to set.
+ * @brief Fills the entire matrix with a constant scalar.
+ * @param m Target matrix.
+ * @param val Scalar value.
  */
 void matrix_fill(Matrix m, float val);
 
 /**
- * @brief Returns a view of the specified row in the matrix.
- * @param m The matrix.
- * @param row The row index.
- * @return Matrix A view of the specified row.
+ * @brief Returns a view of a single row as a (1 x cols) matrix.
+ * @param m Source matrix.
+ * @param row Row index.
+ * @return Matrix A shallow copy (view) of the row data.
  */
 Matrix matrix_row(Matrix m, size_t row);
 
 /**
- * @brief Returns a view of the specified sub-matrix of 'm'.
- * @param m The matrix.
- * @param row The starting row index.
- * @param col The starting column index.
- * @param rows The number of rows in the sub-matrix.
- * @param cols The number of columns in the sub-matrix.
- * @return Matrix A view of the specified sub-matrix.
+ * @brief Returns a rectangular sub-section of a larger matrix.
+ * @param m Source matrix.
+ * @param row Start row.
+ * @param col Start column.
+ * @param rows Sub-rows count.
+ * @param cols Sub-cols count.
+ * @return Matrix A shallow copy (view) with adjusted stride.
  */
 Matrix matrix_submatrix(Matrix m, size_t row, size_t col, size_t rows,
                         size_t cols);
 
 /**
- * @brief Copies matrix 'a' into 'res' (res = a).
- * @param res The destination matrix.
- * @param a The source matrix.
- * @note Dimensions must match.
+ * @brief Deep copies contents of matrix 'a' into 'res'.
+ * @param res Destination matrix.
+ * @param a Source matrix.
  */
 void matrix_copy(Matrix res, Matrix a);
 
 /**
- * @brief Applies the sigmoid activation function to each element of the matrix.
- * @param m The matrix to apply the sigmoid function to.
+ * @brief Applies element-wise sigmoid activation in-place.
  */
 void matrix_sigf(Matrix m);
 
 /**
- * @brief Accumulates matrix 'a' into 'res' (res = res + a).
- * @param res The destination and first operand.
- * @param a The matrix to add.
- * @note Dimensions must match.
+ * @brief Element-wise accumulation: res += a.
  */
 void matrix_acc(Matrix res, Matrix a);
 
 /**
- * @brief Adds matrix 'a' to 'b' and stores the result in 'res' (res = a + b).
- * @param res The destination matrix.
- * @param a The first operand.
- * @param b The second operand.
- * @note Dimensions must match.
+ * @brief Element-wise addition: res = a + b.
  */
 void matrix_sum(Matrix res, Matrix a, Matrix b);
 
 /**
- * @brief Performs matrix multiplication: res = a * b.
- * @param res The destination matrix.
- * @param a The left operand.
- * @param b The right operand.
- * @note Dimensions must be compatible: a.cols == b.rows.
+ * @brief Matrix dot product (Linear transformation): res = a * b.
+ *
+ * Implements the core wx multiplication in the MLP hidden layers.
  */
 void matrix_dot(Matrix res, Matrix a, Matrix b);
 
 /**
- * @brief Structure to represent a neural network.
- * @var NeuralNetwork::count The number of layers in the neural network.
- * @var NeuralNetwork::ws The weights of the neural network.
- * @var NeuralNetwork::bs The biases of the neural network.
- * @var NeuralNetwork::as The activations of the neural network.
+ * @struct NeuralNetwork
+ * @brief MLP Architecture descriptor and parameter container.
  */
 typedef struct {
-  size_t count;
-  Matrix *ws;
-  Matrix *bs;
-  Matrix *as;
+  size_t count; /**< Number of weight/bias layers. */
+  Matrix *ws;  /**< Weight matrices for each layer connection. */
+  Matrix *bs;  /**< Bias vectors for each layer. */
+  Matrix *as;  /**< Activation vectors for each layer (including input). */
 } NeuralNetwork;
 
 /**
- * @brief Prints the neural network.
- * @param nn The neural network to print.
+ * @brief Interface to print the entire model architecture and parameters.
  */
 #define NN_PRINT(nn) nn_print(nn, #nn)
 
 /**
- * @brief Returns the input matrix of the neural network.
- * @param nn The neural network.
- * @return The input matrix.
+ * @brief Shallow access to the input layer activations.
  */
 #define NN_INPUT(nn) ((nn).as[0])
 
 /**
- * @brief Returns the output matrix of the neural network.
- * @param nn The neural network.
- * @return The output matrix.
+ * @brief Shallow access to the final output layer activations.
  */
 #define NN_OUTPUT(nn) ((nn).as[(nn).count])
 
 /**
- * @brief Allocates memory for a neural network.
- * @param arch Array of layer sizes.
- * @param arch_count Number of layers.
- * @return NeuralNetwork.
+ * @brief Initializes a Neural Network model from an architecture array.
+ * @param arch Array of neurons per layer (e.g., {2, 2, 1}).
+ * @param arch_count Length of arch array.
+ * @return NeuralNetwork The allocated model.
  */
 NeuralNetwork nn_alloc(size_t *arch, size_t arch_count);
 
 /**
- * @brief Frees the memory allocated for a neural network.
- * @param nn The neural network to free.
+ * @brief Deallocates all weights, biases, and activation buffers in the model.
  */
 void nn_free(NeuralNetwork nn);
 
 /**
- * @brief Prints the neural network.
- * @param nn The neural network to print.
- * @param name The name of the neural network.
+ * @brief Displays the network's layers, weights, and current activations.
  */
 void nn_print(NeuralNetwork nn, const char *name);
 
 /**
- * @brief Initializes the neural network with random weights and biases.
- * @param nn The neural network to initialize.
- * @param low The lower bound of the random values.
- * @param high The upper bound of the random values.
+ * @brief Performs random initialization of model parameters.
  */
 void nn_rand(NeuralNetwork nn, float low, float high);
 
 /**
- * @brief Forward pass of the neural network.
- * @param nn The neural network.
+ * @brief Forward Propagation: x -> [Linear + Activation] -> y
+ *
+ * Computes activations for all layers given the current input in NN_INPUT(nn).
  */
 void nn_forward(NeuralNetwork nn);
 
 /**
- * @brief Calculates the cost of the neural network.
- * @param nn The neural network.
- * @param ti The input matrix.
- * @param to The output matrix.
- * @return The cost of the neural network.
+ * @brief Mean Squared Error (MSE) Cost calculation.
+ *
+ * Sum of squared differences between predictions (from forward pass) and targets.
+ * @param nn The model to evaluate.
+ * @param ti Training input matrix.
+ * @param to Training target matrix.
+ * @return float Normalized scalar cost.
  */
 float nn_cost(NeuralNetwork nn, Matrix ti, Matrix to);
 
 /**
- * @brief Calculates the gradient of the neural network.
- * @param nn The neural network.
- * @param grad The gradient of the neural network.
- * @param eps The epsilon value.
- * @param ti The input matrix.
- * @param to The output matrix.
+ * @brief Finite Differences Gradient Approximation.
+ *
+ * Approximates partial derivatives of the cost function with respect to every
+ * weight and bias in the network.
+ *
+ * @param nn The model.
+ * @param grad Gradient container (must match nn architecture).
+ * @param eps Small perturbation value (epsilon).
+ * @param ti Training inputs.
+ * @param to Training targets.
  */
 void nn_finite_diff(NeuralNetwork nn, NeuralNetwork grad, float eps, Matrix ti,
                     Matrix to);
 
 /**
- * @brief Updates the neural network with the gradient.
- * @param nn The neural network.
- * @param grad The gradient of the neural network.
- * @param rate The learning rate.
+ * @brief Stochastic Gradient Descent (SGD) update step.
+ *
+ * Updates parameters: w = w - rate * grad
+ *
+ * @param nn Model to optimize.
+ * @param grad Pre-calculated gradient.
+ * @param rate Learning rate (Step size).
  */
 void nn_learn(NeuralNetwork nn, NeuralNetwork grad, float rate);
 
