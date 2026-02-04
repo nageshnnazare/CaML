@@ -53,8 +53,6 @@ int main() {
       .data = train_data + 2,
   };
 
-  float eps = 1e-1;
-  float rate = 1e-1;
   size_t arch[] = {2, 2, 1};
 
   NeuralNetwork nn = nn_alloc(arch, NN_ARRAY_LEN(arch));
@@ -62,8 +60,14 @@ int main() {
   nn_rand(nn, 0.0, 1.0);
 
   // Training loop
-  for (size_t i = 0; i < 20000; i++) {
+  for (size_t i = 0; i < 10*1000; i++) {
+    float rate = 1e-1;
+#ifdef XOR_FINITE_DIFF
+    float eps = 1e-1;
     nn_finite_diff(nn, grad, eps, ti, to);
+#else
+    nn_backprop(nn, grad, ti, to);
+#endif
     nn_learn(nn, grad, rate);
     // printf("Cost: %f\n", nn_cost(nn, ti, to));
   }

@@ -2,12 +2,12 @@
  * @file nn.h
  * @brief A lightweight, header-only neural network library in C.
  *
- * This library provides a modular implementation of a multi-layer perceptron (MLP).
- * It uses a custom Matrix library for all linear algebra operations.
+ * This library provides a modular implementation of a multi-layer perceptron
+ * (MLP). It uses a custom Matrix library for all linear algebra operations.
  *
  * @section usage Usage
- * To use the implementation in a single C file, define `NN_IMPLEMENTATION` before
- * including this header:
+ * To use the implementation in a single C file, define `NN_IMPLEMENTATION`
+ * before including this header:
  * @code
  * #define NN_IMPLEMENTATION
  * #include "nn.h"
@@ -16,21 +16,25 @@
  * @section concepts Machine Learning Fundamentals
  * @subsection linear_transformation Linear Transformation: y = wx + b
  * The core of each neuron is a linear transformation:
- * - **w (Weights)**: Parameters that determine the strength of connection between neurons.
+ * - **w (Weights)**: Parameters that determine the strength of connection
+ * between neurons.
  * - **x (Inputs)**: Features or activations from the previous layer.
- * - **b (Biases)**: Parameters that allow the neuron to shift the activation function.
- * - **y (Logits)**: The raw output before applying a non-linear activation function.
+ * - **b (Biases)**: Parameters that allow the neuron to shift the activation
+ * function.
+ * - **y (Logits)**: The raw output before applying a non-linear activation
+ * function.
  *
  * @subsection forward_pass Forward Propagation
- * Computes the network's output by performing matrix multiplication (dot product)
- * followed by adding biases and applying a non-linear activation (Sigmoid).
+ * Computes the network's output by performing matrix multiplication (dot
+ * product) followed by adding biases and applying a non-linear activation
+ * (Sigmoid).
  *
  * @subsection cost_function Cost/Loss Function
  * Measures the error between predicted and target values (Mean Squared Error).
  *
  * @subsection finite_diff Finite Differences Gradient Approximation
- * Approximates gradients by perturbing each parameter (Weight or Bias) by a small
- * epsilon ($\epsilon$) and observing the change in cost.
+ * Approximates gradients by perturbing each parameter (Weight or Bias) by a
+ * small epsilon ($\epsilon$) and observing the change in cost.
  *
  * @subsection gradient_descent Gradient Descent
  * Optimizes the network by updating parameters in the opposite direction of the
@@ -150,6 +154,12 @@ void matrix_rand(Matrix m, float low, float high);
 void matrix_fill(Matrix m, float val);
 
 /**
+ * @brief Zeros out the entire matrix.
+ * @param m Target matrix.
+ */
+void matrix_zero(Matrix m);
+
+/**
  * @brief Returns a view of a single row as a (1 x cols) matrix.
  * @param m Source matrix.
  * @param row Row index.
@@ -204,9 +214,9 @@ void matrix_dot(Matrix res, Matrix a, Matrix b);
  */
 typedef struct {
   size_t count; /**< Number of weight/bias layers. */
-  Matrix *ws;  /**< Weight matrices for each layer connection. */
-  Matrix *bs;  /**< Bias vectors for each layer. */
-  Matrix *as;  /**< Activation vectors for each layer (including input). */
+  Matrix *ws;   /**< Weight matrices for each layer connection. */
+  Matrix *bs;   /**< Bias vectors for each layer. */
+  Matrix *as;   /**< Activation vectors for each layer (including input). */
 } NeuralNetwork;
 
 /**
@@ -248,6 +258,11 @@ void nn_print(NeuralNetwork nn, const char *name);
 void nn_rand(NeuralNetwork nn, float low, float high);
 
 /**
+ * @brief Zero initialization of model parameters.
+ */
+void nn_zero(NeuralNetwork nn);
+
+/**
  * @brief Forward Propagation: x -> [Linear + Activation] -> y
  *
  * Computes activations for all layers given the current input in NN_INPUT(nn).
@@ -257,7 +272,8 @@ void nn_forward(NeuralNetwork nn);
 /**
  * @brief Mean Squared Error (MSE) Cost calculation.
  *
- * Sum of squared differences between predictions (from forward pass) and targets.
+ * Sum of squared differences between predictions (from forward pass) and
+ * targets.
  * @param nn The model to evaluate.
  * @param ti Training input matrix.
  * @param to Training target matrix.
@@ -279,6 +295,19 @@ float nn_cost(NeuralNetwork nn, Matrix ti, Matrix to);
  */
 void nn_finite_diff(NeuralNetwork nn, NeuralNetwork grad, float eps, Matrix ti,
                     Matrix to);
+
+/**
+ * @brief Backpropagation Algorithm.
+ *
+ * Computes the gradient of the cost function with respect to every weight and
+ * bias in the network.
+ *
+ * @param nn The model.
+ * @param grad Gradient container (must match nn architecture).
+ * @param ti Training inputs.
+ * @param to Training targets.
+ */
+void nn_backprop(NeuralNetwork nn, NeuralNetwork grad, Matrix ti, Matrix to);
 
 /**
  * @brief Stochastic Gradient Descent (SGD) update step.
@@ -366,6 +395,10 @@ void matrix_fill(Matrix m, float val) {
       MATRIX_AT(m, i, j) = val;
     }
   }
+}
+
+void matrix_zero(Matrix m) {
+  matrix_fill(m, 0);
 }
 
 Matrix matrix_row(Matrix m, size_t row) {
@@ -487,6 +520,15 @@ void nn_rand(NeuralNetwork nn, float low, float high) {
   }
 }
 
+void nn_zero(NeuralNetwork nn) {
+  for (size_t i = 0; i < nn.count; i++) {
+    matrix_zero(nn.ws[i]);
+    matrix_zero(nn.bs[i]);
+    matrix_zero(nn.as[i]);
+  }
+  matrix_zero(nn.as[nn.count]);
+}
+
 void nn_forward(NeuralNetwork nn) {
   for (size_t i = 0; i < nn.count; i++) {
     matrix_dot(nn.as[i + 1], nn.as[i], nn.ws[i]);
@@ -543,6 +585,62 @@ void nn_finite_diff(NeuralNetwork nn, NeuralNetwork grad, float eps, Matrix ti,
   }
 
 #undef NN_FINITE_DIFF
+}
+
+void nn_backprop(NeuralNetwork nn, NeuralNetwork grad, Matrix ti, Matrix to) {
+  NN_ASSERT(ti.rows == to.rows);
+  NN_ASSERT(ti.cols == NN_INPUT(nn).cols);
+  NN_ASSERT(to.cols == NN_OUTPUT(nn).cols);
+
+  size_t n = ti.rows;
+  nn_zero(grad);
+
+  // i = current training sample
+  // l = current layer
+  // j = current activation
+  // k = previous weight
+
+  for (size_t i = 0; i < n; i++) {
+    matrix_copy(NN_INPUT(nn), matrix_row(ti, i));
+    nn_forward(nn);
+
+    for (size_t j = 0; j <= nn.count; j++) {
+      matrix_zero(grad.as[j]);
+    }
+
+    for (size_t j = 0; j < to.cols; j++) {
+      MATRIX_AT(NN_OUTPUT(grad), 0, j) =
+          MATRIX_AT(NN_OUTPUT(nn), 0, j) - MATRIX_AT(to, i, j);
+    }
+
+    for (size_t l = nn.count; l > 0; l--) {
+      for (size_t j = 0; j < nn.as[l].cols; j++) {
+        float a = MATRIX_AT(nn.as[l], 0, j);
+        float da = MATRIX_AT(grad.as[l], 0, j);
+        MATRIX_AT(grad.bs[l - 1], 0, j) += 2 * da * a * (1 - a);
+        for (size_t k = 0; k < nn.as[l - 1].cols; k++) {
+          // j = weight matrix column
+          // k = weight matrix row
+          float prev_a = MATRIX_AT(nn.as[l - 1], 0, k);
+          float w = MATRIX_AT(nn.ws[l - 1], k, j);
+          MATRIX_AT(grad.ws[l - 1], k, j) += 2 * da * a * (1 - a) * prev_a;
+          MATRIX_AT(grad.as[l - 1], 0, k) += 2 * da * a * (1 - a) * w;
+        }
+      }
+    }
+  }
+  for (size_t i = 0; i < grad.count; ++i) {
+    for (size_t j = 0; j < grad.ws[i].rows; ++j) {
+      for (size_t k = 0; k < grad.ws[i].cols; ++k) {
+        MATRIX_AT(grad.ws[i], j, k) /= n;
+      }
+    }
+    for (size_t j = 0; j < grad.bs[i].rows; ++j) {
+      for (size_t k = 0; k < grad.bs[i].cols; ++k) {
+        MATRIX_AT(grad.bs[i], j, k) /= n;
+      }
+    }
+  }
 }
 
 void nn_learn(NeuralNetwork nn, NeuralNetwork grad, float rate) {
