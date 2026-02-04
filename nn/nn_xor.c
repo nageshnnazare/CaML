@@ -60,7 +60,7 @@ int main() {
   nn_rand(nn, 0.0, 1.0);
 
   // Training loop
-  for (size_t i = 0; i < 10*1000; i++) {
+  for (size_t i = 0; i < 10 * 1000; i++) {
     float rate = 1e-1;
 #ifdef XOR_FINITE_DIFF
     float eps = 1e-1;

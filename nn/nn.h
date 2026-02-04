@@ -397,9 +397,7 @@ void matrix_fill(Matrix m, float val) {
   }
 }
 
-void matrix_zero(Matrix m) {
-  matrix_fill(m, 0);
-}
+void matrix_zero(Matrix m) { matrix_fill(m, 0); }
 
 Matrix matrix_row(Matrix m, size_t row) {
   return (Matrix){.rows = 1,
@@ -496,14 +494,23 @@ void nn_print(NeuralNetwork nn, const char *name) {
   int padding = 4;
   printf("%s = [\n", name);
   for (size_t i = 0; i < nn.count; i++) {
+    if (i == 0) {
+      printf("%*s", padding, "");
+      printf("%s:\n", "#Input");
+      snprintf(buf, sizeof(buf), "as[%zu]", i);
+      matrix_print(nn.as[i], buf, padding + 2);
+      printf("\n");
+    }
     printf("%*s", padding, "");
-    printf("%s %zu:\n", "#Layer", i);
+    printf("%s %zu:\n", "#HiddenLayer", i);
     snprintf(buf, sizeof(buf), "ws[%zu]", i);
     matrix_print(nn.ws[i], buf, padding + 2);
     snprintf(buf, sizeof(buf), "bs[%zu]", i);
     matrix_print(nn.bs[i], buf, padding + 2);
-    snprintf(buf, sizeof(buf), "as[%zu]", i);
-    matrix_print(nn.as[i], buf, padding + 2);
+    if (i + 1 < nn.count) {
+      snprintf(buf, sizeof(buf), "as[%zu]", i + 1);
+      matrix_print(nn.as[i + 1], buf, padding + 2);
+    }
     printf("\n");
   }
   printf("%*s", padding, "");
