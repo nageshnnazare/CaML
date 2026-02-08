@@ -7,7 +7,7 @@
  * calculation and gradient descent for learning.
  */
 #define NN_IMPLEMENTATION
-#include "nn.h"
+#include "../nn.h"
 
 #include <time.h>
 
@@ -39,14 +39,14 @@ int main() {
   size_t stride = 3;
   size_t n = sizeof(train_data) / sizeof(train_data[0]) / stride;
 
-  Matrix ti = {
+  NN_Matrix ti = {
       .rows = n,
       .cols = 2,
       .stride = stride,
       .data = train_data,
   };
 
-  Matrix to = {
+  NN_Matrix to = {
       .rows = n,
       .cols = 1,
       .stride = stride,
@@ -55,8 +55,8 @@ int main() {
 
   size_t arch[] = {2, 2, 1};
 
-  NeuralNetwork nn = nn_alloc(arch, NN_ARRAY_LEN(arch));
-  NeuralNetwork grad = nn_alloc(arch, NN_ARRAY_LEN(arch));
+  NN_NeuralNetwork nn = nn_alloc(arch, NN_ARRAY_LEN(arch));
+  NN_NeuralNetwork grad = nn_alloc(arch, NN_ARRAY_LEN(arch));
   nn_rand(nn, 0.0, 1.0);
 
   // Training loop
@@ -75,10 +75,10 @@ int main() {
   // Testing/Verification loop
   for (size_t i = 0; i < 2; ++i) {
     for (size_t j = 0; j < 2; ++j) {
-      MATRIX_AT(NN_INPUT(nn), 0, 0) = i;
-      MATRIX_AT(NN_INPUT(nn), 0, 1) = j;
+      NN_MAT_AT(NN_INPUT(nn), 0, 0) = i;
+      NN_MAT_AT(NN_INPUT(nn), 0, 1) = j;
       nn_forward(nn);
-      printf("%zu ^ %zu = %f\n", i, j, MATRIX_AT(NN_OUTPUT(nn), 0, 0));
+      printf("%zu ^ %zu = %f\n", i, j, NN_MAT_AT(NN_OUTPUT(nn), 0, 0));
     }
   }
 

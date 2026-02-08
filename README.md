@@ -9,7 +9,7 @@ stb style single header library for matrix operations and neural networks
 - `nn/`: Core library and modular implementations.
   - `nn.h`: Single-header library with matrix implementations, macros, and activation functions.
   - `nn_xor.c`: Fully documented XOR implementation using the modular library.
-  - `nn_test.c`: Test suite for the `Matrix` library operations.
+  - `nn_test.c`: Test suite for the `NN_Matrix` library operations.
 - `basics/`: Educational examples demonstrating simple ML concepts (self-contained).
   - `ml_helloWorld.c`: Simple linear regression (y = wx + b).
   - `ml_withBoolean.c`: Single neuron training for OR/AND gates.
@@ -49,8 +49,8 @@ Example for XOR gate (modular implementation):
 
 ## Core Concepts
 
-### Matrix Operations
-The foundation of the library is a simple [Matrix](nn/nn.h#L31-L36) struct and associated mathematical operations. Detailed documentation for these functions can be found in the [nn/ documentation](nn/README.md).
+### NN_Matrix Operations
+The foundation of the library is a simple [NN_Matrix](nn/nn.h#L31-L36) struct and associated mathematical operations. Detailed documentation for these functions can be found in the [nn/ documentation](nn/README.md).
 
 ### Gradient Approximation
 Instead of backpropagation (initially), the examples use **Finite Differences** to approximate gradients:

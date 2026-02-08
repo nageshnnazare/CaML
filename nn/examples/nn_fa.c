@@ -9,7 +9,7 @@
  */
 
 #define NN_IMPLEMENTATION
-#include "nn.h"
+#include "../nn.h"
 
 #include <time.h>
 
@@ -26,10 +26,10 @@ int main() {
   size_t n = (1 << BITS); // Number of possible values for BITS bits
   size_t rows = n * n;    // Total combinations of (x, y)
 
-  // Input Matrix: (x_bits, y_bits)
-  Matrix ti = matrix_alloc(rows, BITS * 2);
-  // Output Matrix: (sum_bits, overflow_bit)
-  Matrix to = matrix_alloc(rows, BITS + 1);
+  // Input NN_Matrix: (x_bits, y_bits)
+  NN_Matrix ti = nn_mat_alloc(rows, BITS * 2);
+  // Output NN_Matrix: (sum_bits, overflow_bit)
+  NN_Matrix to = nn_mat_alloc(rows, BITS + 1);
 
   // Generate training data for all possible sums of x and y
   for (size_t i = 0; i < ti.rows; i++) {
@@ -38,19 +38,19 @@ int main() {
     size_t z = x + y;
     for (size_t j = 0; j < BITS; j++) {
       // Decompose x and y into bits for input
-      MATRIX_AT(ti, i, j) = (x >> j) & 1;
-      MATRIX_AT(ti, i, j + BITS) = (y >> j) & 1;
+      NN_MAT_AT(ti, i, j) = (x >> j) & 1;
+      NN_MAT_AT(ti, i, j + BITS) = (y >> j) & 1;
       // Decompose z (sum) into bits for target output
-      MATRIX_AT(to, i, j) = (z >> j) & 1;
+      NN_MAT_AT(to, i, j) = (z >> j) & 1;
     }
     // Set the overflow bit (carry out of the last bit)
-    MATRIX_AT(to, i, BITS) = z >= n;
+    NN_MAT_AT(to, i, BITS) = z >= n;
   }
 
   // Define the network architecture: [Inputs, Hidden Layer, Outputs]
   size_t arch[] = {2 * BITS, 2 * BITS, BITS + 1};
-  NeuralNetwork nn = nn_alloc(arch, NN_ARRAY_LEN(arch));
-  NeuralNetwork grad = nn_alloc(arch, NN_ARRAY_LEN(arch));
+  NN_NeuralNetwork nn = nn_alloc(arch, NN_ARRAY_LEN(arch));
+  NN_NeuralNetwork grad = nn_alloc(arch, NN_ARRAY_LEN(arch));
 
   // Randomize initial weights
   nn_rand(nn, 0.0, 1.0);
@@ -72,14 +72,14 @@ int main() {
       size_t z = x + y;
       // Load current x and y into the NN input layer
       for (size_t j = 0; j < BITS; j++) {
-        MATRIX_AT(NN_INPUT(nn), 0, j) = (x >> j) & 1;
-        MATRIX_AT(NN_INPUT(nn), 0, j + BITS) = (y >> j) & 1;
+        NN_MAT_AT(NN_INPUT(nn), 0, j) = (x >> j) & 1;
+        NN_MAT_AT(NN_INPUT(nn), 0, j + BITS) = (y >> j) & 1;
       }
 
       nn_forward(nn);
 
       // Check overflow bit
-      if (MATRIX_AT(NN_OUTPUT(nn), 0, BITS) > 0.5) {
+      if (NN_MAT_AT(NN_OUTPUT(nn), 0, BITS) > 0.5) {
         if (z < n) {
           printf("%zu + %zu = (ov<>%zu)\n", x, y, z);
           fail_count++;
@@ -88,7 +88,7 @@ int main() {
         // Reconstruct numeric sum from output bits
         size_t a = 0;
         for (size_t j = 0; j < BITS; j++) {
-          size_t bit = MATRIX_AT(NN_OUTPUT(nn), 0, j) > 0.5;
+          size_t bit = NN_MAT_AT(NN_OUTPUT(nn), 0, j) > 0.5;
           a |= bit << j;
         }
         // Verify reconstructed sum against actual sum
@@ -105,7 +105,7 @@ int main() {
   // Cleanup
   nn_free(nn);
   nn_free(grad);
-  matrix_free(ti);
-  matrix_free(to);
+  nn_mat_free(ti);
+  nn_mat_free(to);
   return 0;
 }

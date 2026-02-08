@@ -10,8 +10,8 @@ This directory contains the core matrix library and neural network implementatio
 
 ## Core Data Structures
 
-### Matrix
-The `Matrix` struct is the fundamental building block. It uses a flat array to represent a 2D matrix with a `stride` for efficient sub-matrix views.
+### NN_Matrix
+The `NN_Matrix` struct is the fundamental building block. It uses a flat array to represent a 2D matrix with a `stride` for efficient sub-matrix views.
 
 ```c
 typedef struct {
@@ -19,7 +19,7 @@ typedef struct {
   size_t cols;
   size_t stride;
   float *data;
-} Matrix;
+} NN_Matrix;
 ```
 
 ## Key Functions
