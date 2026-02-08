@@ -3,7 +3,7 @@ CFLAGS = -Wall -Werror -O3
 LIBS = -lm -ldl 
 BUILD_DIR = build
 
-TARGETS = ml_helloWorld ml_withBoolean ml_xor mat_xor nn_xor nn_test nn_fa nn_viz
+TARGETS = ml_helloWorld ml_withBoolean ml_xor mat_xor nn_xor nn_test nn_fa nn_fa_viz nn_viz
 BINARIES = $(addprefix $(BUILD_DIR)/, $(TARGETS))
 
 # Raylib configuration (macOS specific with pkg-config)
@@ -35,6 +35,9 @@ $(BUILD_DIR)/nn_xor: nn/examples/nn_xor.c nn/nn.h | $(BUILD_DIR)
 
 $(BUILD_DIR)/nn_fa: nn/examples/nn_fa.c nn/nn.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+$(BUILD_DIR)/nn_fa_viz: nn/examples/nn_fa_viz.c nn/nn.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(RAYLIB_CFLAGS) -o $@ $< $(LIBS) $(RAYLIB_LIBS)
 
 $(BUILD_DIR)/nn_viz: nn/nn_viz.c nn/nn.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(RAYLIB_CFLAGS) -o $@ $< $(LIBS) $(RAYLIB_LIBS)

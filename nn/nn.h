@@ -235,6 +235,56 @@ typedef struct {
 #define NN_OUTPUT(nn) ((nn).as[(nn).count])
 
 /**
+ * @brief Shallow acces to architecture array count
+ */
+#define NN_ARCH_COUNT(nn) ((nn).count + 1)
+
+/**
+ * @brief Shallow acces to activation layer col count
+ */
+#define NN_ACTIVATION_LAYER_COL_COUNT(nn, l) ((nn).as[l].cols)
+
+/**
+ * @brief Shallow acces to activation layer row count
+ */
+#define NN_ACTIVATION_LAYER_ROW_COUNT(nn, l) ((nn).as[l].rows)
+
+/**
+ * @brief Shallow acces to activation layer
+ */
+#define NN_ACTIVATION_LAYER(nn, l) ((nn).as[l])
+
+/**
+ * @brief Shallow acces to weight layer col count
+ */
+#define NN_WEIGHT_LAYER_COL_COUNT(nn, l) ((nn).ws[l].cols)
+
+/**
+ * @brief Shallow acces to weight layer row count
+ */
+#define NN_WEIGHT_LAYER_ROW_COUNT(nn, l) ((nn).ws[l].rows)
+
+/**
+ * @brief Shallow acces to weight layer
+ */
+#define NN_WEIGHT_LAYER(nn, l) ((nn).ws[l])
+
+/**
+ * @brief Shallow acces to bias layer col count
+ */
+#define NN_BIAS_LAYER_COL_COUNT(nn, l) ((nn).bs[l].cols)
+
+/**
+ * @brief Shallow acces to bias layer row count
+ */
+#define NN_BIAS_LAYER_ROW_COUNT(nn, l) ((nn).bs[l].rows)
+
+/**
+ * @brief Shallow acces to bias layer
+ */
+#define NN_BIAS_LAYER(nn, l) ((nn).bs[l])
+
+/**
  * @brief Initializes a Neural Network model from an architecture array.
  * @param arch Array of neurons per layer (e.g., {2, 2, 1}).
  * @param arch_count Length of arch array.
