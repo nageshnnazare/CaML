@@ -624,7 +624,7 @@ void nn_finite_diff(NN_NeuralNetwork nn, NN_NeuralNetwork grad, float eps,
   float cost = nn_cost(nn, ti, to);
 
 #define NN_FINITE_DIFF(field)                                                  \
-  {                                                                            \
+  do {                                                                         \
     for (size_t j = 0; j < nn.field.rows; j++) {                               \
       for (size_t k = 0; k < nn.field.cols; k++) {                             \
         save = NN_MAT_AT(nn.field, j, k);                                      \
@@ -633,9 +633,7 @@ void nn_finite_diff(NN_NeuralNetwork nn, NN_NeuralNetwork grad, float eps,
         NN_MAT_AT(nn.field, j, k) = save;                                      \
       }                                                                        \
     }                                                                          \
-  }                                                                            \
-  while (0)                                                                    \
-    ;
+  } while (0)
 
   for (size_t i = 0; i < nn.count; i++) {
     NN_FINITE_DIFF(ws[i]);
@@ -705,15 +703,13 @@ void nn_backprop(NN_NeuralNetwork nn, NN_NeuralNetwork grad, NN_Matrix ti,
 void nn_learn(NN_NeuralNetwork nn, NN_NeuralNetwork grad, float rate) {
 
 #define NN_LEARN(field)                                                        \
-  {                                                                            \
+  do {                                                                         \
     for (size_t j = 0; j < nn.field.rows; j++) {                               \
       for (size_t k = 0; k < nn.field.cols; k++) {                             \
         NN_MAT_AT(nn.field, j, k) -= rate * NN_MAT_AT(grad.field, j, k);       \
       }                                                                        \
     }                                                                          \
-  }                                                                            \
-  while (0)                                                                    \
-    ;
+  } while (0)
 
   for (size_t i = 0; i < nn.count; i++) {
     NN_LEARN(ws[i]);

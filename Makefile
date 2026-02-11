@@ -39,7 +39,7 @@ $(BUILD_DIR)/nn_fa: nn/examples/nn_fa.c nn/nn.h | $(BUILD_DIR)
 $(BUILD_DIR)/nn_fa_viz: nn/examples/nn_fa_viz.c nn/nn.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(RAYLIB_CFLAGS) -o $@ $< $(LIBS) $(RAYLIB_LIBS)
 
-$(BUILD_DIR)/nn_viz: nn/nn_viz.c nn/nn.h | $(BUILD_DIR)
+$(BUILD_DIR)/nn_viz: nn/nn_viz.c nn/nn.h nn/deps/sv.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(RAYLIB_CFLAGS) -o $@ $< $(LIBS) $(RAYLIB_LIBS)
 
 clean:
